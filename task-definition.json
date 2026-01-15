@@ -1,0 +1,24 @@
+{
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "family": "magamsale-backend-task",
+  "containerDefinitions": [
+    {
+      "name": "backend-container",
+      "image": "850307060788.dkr.ecr.ap-northeast-2.amazonaws.com/magamsale-backend:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080
+        }
+      ]
+    }
+  ],
+  "volumes": [],
+  "networkMode": "awsvpc",
+  "memory": "3 GB",
+  "cpu": "1 vCPU",
+  "executionRoleArn": "arn:aws:iam::850307060788:role/ecsTaskExecutionRole"
+}

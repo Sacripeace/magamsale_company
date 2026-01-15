@@ -5,11 +5,13 @@ on:
     branches: [ "main" ]
 
 env:
-  # 🔥 여기를 상품(Product) 서버용으로 변경!
   AWS_REGION: ap-northeast-2
+  # 🔥 [확인 1] Product용 ECR 저장소 이름 (보내주신 대로 설정함)
   ECR_REPOSITORY: magamsale-backend
+  # 🔥 [확인 2] AWS에 떠있는 서비스 이름 (보내주신 이름 그대로)
   ECS_SERVICE: magamsale-backend-task-service-m4pcijm5
   ECS_CLUSTER: magamsale-cluster
+  # 🔥 [확인 3] task-definition.json 안의 "name": "..." 과 똑같아야 함!
   CONTAINER_NAME: backend-container
 
 permissions:
@@ -53,6 +55,26 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          # :latest 태그와 :commit-hash 태그 두 개를 다 만들어 올립니다
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "Image pushed successfully!"
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # 👇 여기서부터 배포 단계 시작! (들여쓰기 주의)
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }} # env에 적은 backend-container를 씀
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
