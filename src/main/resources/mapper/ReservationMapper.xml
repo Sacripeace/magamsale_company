@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.magamsale.store.repository.ReservationRepository">
+
+    <select id="selectProductSnapshot" resultType="map">
+        SELECT
+        p.product_id AS productId,
+        p.seller_uid AS sellerUid,
+        p.sale_price AS salePrice,
+        p.name       AS productName,
+        p.image_url  AS imageUrl
+        FROM product_tb p
+        WHERE p.product_id = #{productId}
+    </select>
+
+    <update id="decreaseProductQuantity">
+        UPDATE product_tb
+        SET sale_quantity = sale_quantity - #{qty}
+        WHERE product_id = #{productId} AND sale_quantity >= #{qty}
+    </update>
+
+    <update id="increaseProductQuantity">
+        UPDATE product_tb
+        SET sale_quantity = sale_quantity + #{qty}
+        WHERE product_id = #{productId}
+    </update>
+
+    <insert id="insertReservation" parameterType="map" useGeneratedKeys="true" keyProperty="reservationId">
+        INSERT INTO reservations_tb (
+        seller_uid,
+        product_id,
+        buyer_type,
+        buyer_uid,
+        buyer_name,
+        buyer_phone,
+        status,
+        quantity,
+        sale_price,
+        total_price,
+        reservation_time,
+        request_message,
+        expires_at,
+        created_at
+        ) VALUES (
+        #{sellerUid},
+        #{productId},
+        #{buyerType},
+        #{buyerUid},
+        #{buyerName},
+        #{buyerPhone},
+        'PENDING',
+        #{quantity},
+        #{salePrice},
+        #{totalPrice},
+        #{reservationTime},
+        #{requestMessage},
+        #{expiresAt},
+        DATE_ADD(NOW(), INTERVAL 9 HOUR)
+        )
+    </insert>
+
+    <select id="selectReservationAuth" resultType="map">
+        SELECT
+        id AS reservationId,
+        seller_uid AS sellerUid,
+        product_id AS productId,
+        buyer_type AS buyerType,
+        buyer_uid AS buyerUid,
+        status,
+        quantity
+        FROM reservations_tb
+        WHERE id = #{reservationId}
+    </select>
+
+    <update id="updateReservationStatus">
+        UPDATE reservations_tb
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{reservationId}
+    </update>
+
+    <select id="selectBySeller" resultType="com.magamsale.store.dto.ReservationResponse">
+        SELECT
+        r.id AS reservationId,
+        r.status,
+        DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i') AS createdAt,
+        r.reservation_time AS reservationTime,
+        r.quantity,
+        r.total_price AS totalPrice,
+        r.request_message AS requestMessage,
+
+        -- 구매자 이름: SELLER면 상호명, 아니면 예약 당시 이름 사용
+        CASE
+        WHEN r.buyer_type = 'SELLER' THEN IFNULL(s_buyer.store_name, r.buyer_name)
+        ELSE r.buyer_name
+        END AS buyerName,
+
+        -- 구매자 연락처: SELLER면 가입시 번호, 아니면 예약 당시 번호 사용
+        CASE
+        WHEN r.buyer_type = 'SELLER' THEN IFNULL(s_buyer.phone_number, r.buyer_phone)
+        ELSE r.buyer_phone
+        END AS buyerPhone,
+
+        p.name AS productName,
+        p.image_url AS imageUrl,
+        DATE_FORMAT(p.deadline_time, '%Y-%m-%d %H:%i') AS deadlineTime
+
+        FROM reservations_tb r
+        JOIN product_tb p ON r.product_id = p.product_id
+
+        -- 구매자가 사업자(SELLER)일 경우에만 조인
+        LEFT JOIN seller_tb s_buyer ON r.buyer_type = 'SELLER' AND r.buyer_uid = s_buyer.uid
+
+        WHERE r.seller_uid = #{sellerUid}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <select id="selectByBuyer" resultType="com.magamsale.store.dto.ReservationResponse">
+        SELECT
+        r.id AS reservationId,
+        r.status,
+        DATE_FORMAT(r.created_at, '%Y-%m-%d %H:%i') AS createdAt,
+        r.reservation_time AS reservationTime,
+        r.quantity,
+        r.total_price AS totalPrice,
+
+        p.name AS productName,
+        p.image_url AS imageUrl,
+        DATE_FORMAT(p.deadline_time, '%Y-%m-%d %H:%i') AS deadlineTime,
+
+        -- [수정] 콤마(,) 추가하고 중복 제거함
+        s.store_name AS storeName,
+        s.address AS storeAddress,
+        s.phone_number AS storePhone
+
+        FROM reservations_tb r
+        JOIN product_tb p ON r.product_id = p.product_id
+        JOIN seller_tb s ON r.seller_uid = s.uid
+        WHERE r.buyer_type = #{buyerType} AND r.buyer_uid = #{buyerUid}
+        ORDER BY r.created_at DESC
+    </select>
+
+    <select id="selectOne" resultType="com.magamsale.store.dto.ReservationResponse">
+        SELECT r.id AS reservationId, r.status
+        FROM reservations_tb r
+        WHERE r.id = #{reservationId}
+    </select>
+
+    <!-- 정산 정리하는 xml-->
+    <select id="selectSellerDashboardStats" resultType="com.magamsale.store.dto.SellerDashboardDto">
+        SELECT
+        (SELECT COALESCE(SUM(total_price), 0)
+        FROM reservations_tb
+        WHERE seller_uid = #{sellerUid} AND status = 'COMPLETED') AS totalSalesAmount,
+
+        (SELECT COUNT(*) FROM product_tb
+        WHERE seller_uid = #{sellerUid} AND status != 'DELETED') AS totalProductCount,
+
+        (SELECT COUNT(*) FROM product_tb
+        WHERE seller_uid = #{sellerUid} AND status = 'ACTIVE') AS sellingProductCount,
+
+        (SELECT COUNT(*) FROM product_tb
+        WHERE seller_uid = #{sellerUid} AND status IN ('SOLD', 'SOLD_OUT')) AS soldProductCount,
+
+        (SELECT COUNT(*) FROM product_tb
+        WHERE seller_uid = #{sellerUid} AND status IN ('EXPIRED', 'CLOSED', 'HIDDEN')) AS closedProductCount
+    </select>
+
+    <!--    예약 알림    -->
+    <select id="selectLatestReservationBySeller" resultType="com.magamsale.store.dto.ReservationResponse">
+        SELECT
+        r.id AS reservationId,
+        p.product_name AS productName,
+        r.reservation_time AS reservationTime,
+        r.status AS status
+        FROM reservations_tb r
+        INNER JOIN products_tb p ON r.product_id = p.id
+        WHERE p.seller_uid = #{sellerUid}
+        ORDER BY r.id DESC
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.magamsale.store.repository.SellerRepository">
+
+    <insert id="insertSeller" parameterType="com.magamsale.store.dto.SellerSignupDTO">
+        INSERT INTO seller_tb
+        (id, pw, phone_number, store_name, business_uid, address, store_lat, store_lng, created_at)
+        VALUES
+        (
+        #{id},
+        #{pw},
+        #{phoneNumber},
+        #{storeName},
+        #{businessUid},
+        #{address},
+        #{storeLat},
+        #{storeLng},
+        DATE_ADD(NOW(), INTERVAL 9 HOUR)
+        )
+    </insert>
+
+    <select id="findById" resultType="com.magamsale.store.entity.Seller">
+        SELECT
+        uid, id, pw,
+        phone_number AS phoneNumber,
+        store_name AS storeName,
+        business_uid AS businessUid,
+        address,
+        store_lat AS storeLat,
+        store_lng AS storeLng,
+        refresh_token AS refreshToken
+        FROM seller_tb
+        WHERE id = #{id}
+    </select>
+
+    <select id="existsById" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM seller_tb WHERE id = #{id}
+    </select>
+
+    <update id="updateRefreshToken">
+        UPDATE seller_tb
+        SET refresh_token = #{refreshToken}
+        WHERE uid = #{uid}
+    </update>
+
+    <select id="findByUid" resultType="com.magamsale.store.entity.Seller">
+        SELECT
+        uid, id, pw, phone_number AS phoneNumber, store_name AS storeName,
+        business_uid AS businessUid, address, store_lat AS storeLat, store_lng AS storeLng,
+        refresh_token AS refreshToken
+        FROM seller_tb
+        WHERE uid = #{uid}
+    </select>
+
+    <select id="selectMyStoreInfo" resultType="com.magamsale.store.dto.SellerInfoResponse">
+        SELECT
+        uid          AS sellerUid,
+        store_name   AS storeName,
+        phone_number AS phone,
+        business_uid AS businessNumber,
+        address      AS address,
+        store_lat    AS storeLat,
+        store_lng    AS storeLng,
+        owner_name   AS ownerName,
+        store_open   AS storeOpen,
+        store_close    AS storeClose,
+        bank_name      AS bankName,
+        account_number AS accountNumber,
+        account_holder AS accountHolder
+        FROM seller_tb
+        WHERE uid = #{sellerUid}
+        LIMIT 1
+    </select>
+
+    <update id="updateMyStoreInfo">
+        UPDATE seller_tb
+        <set>
+            <if test="req.storeName != null">store_name = #{req.storeName},</if>
+            <if test="req.phoneNumber != null and req.phoneNumber != ''">phone_number = #{req.phoneNumber},</if>
+            <if test="req.address != null">address = #{req.address},</if>
+            <if test="req.storeLat != null">store_lat = #{req.storeLat},</if>
+            <if test="req.storeLng != null">store_lng = #{req.storeLng},</if>
+            owner_name = #{req.ownerName},
+            business_uid = #{req.businessNumber},
+            store_open = #{req.storeOpen},
+            store_close = #{req.storeClose},
+            bank_name = #{req.bankName},
+            account_number = #{req.accountNumber},
+            account_holder = #{req.accountHolder}
+        </set>
+        WHERE uid = #{sellerUid}
+    </update>
+
+    <delete id="deleteByUid">
+        DELETE FROM seller_tb WHERE uid = #{uid}
+    </delete>
+
+    <select id="findSellerUidsForPwReset" resultType="int">
+        SELECT uid FROM seller_tb
+        WHERE business_uid = #{businessUid} AND id = #{username} AND phone_number = #{phoneNumber}
+    </select>
+
+    <update id="updatePasswordByUid">
+        UPDATE seller_tb SET pw = #{newPassword} WHERE uid = #{uid}
+    </update>
+
+    <select id="findIdByInfo" resultType="com.magamsale.store.entity.Seller">
+        SELECT * FROM seller_tb
+        WHERE business_uid = #{businessUid}
+        AND phone_number = #{phoneNumber}
+        LIMIT 1
+    </select>
+
+</mapper>

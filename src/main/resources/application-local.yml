@@ -1,0 +1,29 @@
+server:
+  port: 8082  # 🔥 User(8080), Reservation(8081)과 안 겹치게 8082로 설정!
+
+spring:
+  datasource:
+    # DB 주소 (같은 magamsale DB를 쓴다면 그대로, 아니라면 DB이름 확인!)
+    url: jdbc:mariadb://localhost:3306/magamsale
+    username: root
+    password: "0000"
+    driver-class-name: org.mariadb.jdbc.Driver
+
+# ✅ [핵심] 마이바티스 설정 (JPA 대신 이게 필요함)
+mybatis:
+  # 1. XML 파일 위치 (보통 resources/mapper 폴더 안에 둠)
+  mapper-locations: classpath:mapper/*.xml
+
+  # 2. DTO/VO 패키지 경로 (이건 사장님 프로젝트 패키지명에 맞춰 수정 필요할 수 있음)
+  # 예: com.example.magamsale_product.dto 또는 domain
+  type-aliases-package: com.magamsale.store.entity
+  configuration:
+    # 3. DB의 snake_case(user_id)를 자바의 camelCase(userId)로 자동 변환
+    map-underscore-to-camel-case: true
+
+# 📝 SQL 로그 보기 설정
+logging:
+  level:
+    # 마이바티스가 실행하는 쿼리를 콘솔에 찍어줌
+    com.example.magamsale_product.mapper: DEBUG
+    org.apache.ibatis: DEBUG
