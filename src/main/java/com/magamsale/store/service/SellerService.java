@@ -127,6 +127,7 @@ public class SellerService {
         return seller.getId();
     }
 
+
     public void verifySellerForPwReset(FindPwRequest req) {
         List<Integer> uids = sellerRepository.findSellerUidsForPwReset(
                 req.getBusinessUid(),

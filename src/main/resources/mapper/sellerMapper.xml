@@ -107,6 +107,7 @@
         UPDATE seller_tb SET pw = #{newPassword} WHERE uid = #{uid}
     </update>
 
+
     <select id="findIdByInfo" resultType="com.magamsale.store.entity.Seller">
         SELECT * FROM seller_tb
         WHERE business_uid = #{businessUid}
