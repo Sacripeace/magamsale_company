@@ -78,3 +78,8 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+          # 👇 [여기를 추가하세요!] 이 설정이 들어가야 AWS 컨테이너에 값이 들어갑니다.
+          environment-variables: |
+            SPRING_DATASOURCE_URL=jdbc:mariadb://magamsale-company-database.clo060iiyf0u.ap-northeast-2.rds.amazonaws.com:3306/magamsale
+            SPRING_DATASOURCE_USERNAME=admin
+            SPRING_DATASOURCE_PASSWORD=magamsale123
