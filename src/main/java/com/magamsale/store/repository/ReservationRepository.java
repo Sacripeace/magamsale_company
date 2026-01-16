@@ -38,4 +38,7 @@ public interface ReservationRepository {
 
     // ✅ 일반 유저 폰번호 조회
     String selectUserPhone(@Param("uid") int uid);
+
+    // 🚨 [추가] 아이디로 조회하는 메서드
+    String selectUserPhoneById(@Param("id") String id);
 }

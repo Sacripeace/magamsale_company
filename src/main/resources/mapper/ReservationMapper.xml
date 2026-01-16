@@ -188,4 +188,12 @@
         SELECT phone_number FROM user_tb WHERE uid = #{uid}
     </select>
 
+    <select id="selectUserPhone" resultType="String">
+        SELECT phone_number FROM user_tb WHERE uid = #{uid}
+    </select>
+
+    <select id="selectUserPhoneById" resultType="String">
+        SELECT phone_number FROM user_tb WHERE id = #{id}
+    </select>
+
 </mapper>

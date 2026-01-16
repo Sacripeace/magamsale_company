@@ -51,18 +51,27 @@ public class ReservationService {
         String realBuyerPhone = "010-0000-0000";
 
         if ("SELLER".equals(buyerType)) {
-            // 구매자가 판매자인 경우 -> seller_tb 조회
-            String dbPhone = reservationRepository.selectSellerPhone(buyerUid);
-            if (dbPhone != null) realBuyerPhone = dbPhone;
+            // ... (판매자 로직 유지) ...
+            try {
+                String dbPhone = reservationRepository.selectSellerPhone(buyerUid);
+                if (dbPhone != null && !dbPhone.isEmpty()) realBuyerPhone = dbPhone;
+            } catch (Exception e) {}
 
         } else if ("USER".equals(buyerType)) {
-            // 구매자가 일반유저인 경우 -> user_tb 조회 (Seller 백엔드에서 접근 가능하다면)
-            // (만약 User UID가 0으로 들어온다면 조회가 불가능하므로, 이 경우엔 프론트 값을 믿거나 예외처리)
+            // 🚨 [여기가 문제였음!]
+            String dbPhone = null;
             if (buyerUid != 0) {
-                String dbPhone = reservationRepository.selectUserPhone(buyerUid);
-                if (dbPhone != null) realBuyerPhone = dbPhone;
+                // UID가 있으면 UID로 조회
+                dbPhone = reservationRepository.selectUserPhone(buyerUid);
             } else {
-                // UID가 0이면(문자열 ID 유저) 프론트에서 준 값 사용
+                // 🚨 UID가 0이면(문자열 ID) 'buyerName'(=testuser01)으로 조회해야 함!
+                dbPhone = reservationRepository.selectUserPhoneById(buyerName);
+            }
+
+            if (dbPhone != null && !dbPhone.isEmpty()) {
+                realBuyerPhone = dbPhone; // DB 번호 발견!
+            } else {
+                // DB에도 없으면 어쩔 수 없이 프론트 값 사용
                 if (buyerPhone != null && !buyerPhone.isEmpty()) realBuyerPhone = buyerPhone;
             }
         }
