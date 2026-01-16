@@ -101,7 +101,12 @@ public class SecurityConfig {
         // 1. [수정됨] 허용할 오리진 (프론트엔드 주소)
         // 기존 setAllowedOrigins 대신 setAllowedOriginPatterns를 사용하여 모든 주소(*) 허용
         // 이유: AWS Fargate IP가 배포할 때마다 바뀌기 때문에 특정 IP만 적으면 에러가 납니다.
-        config.setAllowedOriginPatterns(List.of("*"));
+//      config.setAllowedOriginPatterns(List.of("*"));
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "https://magamsale-jenuks.vercel.app"
+        ));
 
         // 2. 허용할 HTTP 메서드 (PATCH 포함 필수)
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
