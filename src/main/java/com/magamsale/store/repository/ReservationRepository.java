@@ -32,4 +32,6 @@ public interface ReservationRepository {
     SellerDashboardDto selectSellerDashboardStats(@Param("sellerUid") int sellerUid);
 
     ReservationResponse selectLatestReservationBySeller(@Param("sellerUid") int sellerUid);
+
+    String selectSellerPhone(@Param("sellerUid") int sellerUid);
 }

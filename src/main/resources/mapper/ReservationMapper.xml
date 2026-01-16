@@ -180,4 +180,11 @@
         LIMIT 1
     </select>
 
+<!--    전화번호 입력? -->
+    <select id="selectSellerPhone" resultType="String">
+        SELECT phone_number
+        FROM seller_tb
+        WHERE uid = #{sellerUid}
+    </select>
+
 </mapper>
