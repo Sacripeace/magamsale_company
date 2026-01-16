@@ -48,24 +48,22 @@ public class ReservationService {
         }
 
         // 5. [핵심] DB에서 진짜 전화번호 가져오기 (전화번호 누락 해결)
-        String realBuyerPhone = "010-0000-0000"; // 기본값
+        String realBuyerPhone = "010-0000-0000";
 
         if ("SELLER".equals(buyerType)) {
-            // 구매자가 사업자라면 seller_tb에서 조회 (Repository에 selectSellerPhone 추가 필요)
-            // (주의: ReservationRepository 인터페이스와 XML에 selectSellerPhone이 있어야 함)
-            try {
-                String dbPhone = reservationRepository.selectSellerPhone(buyerUid);
-                if (dbPhone != null && !dbPhone.isEmpty()) {
-                    realBuyerPhone = dbPhone;
-                }
-            } catch (Exception e) {
-                // 메서드가 없거나 에러 시 프론트에서 온 값 사용 시도
+            // 구매자가 판매자인 경우 -> seller_tb 조회
+            String dbPhone = reservationRepository.selectSellerPhone(buyerUid);
+            if (dbPhone != null) realBuyerPhone = dbPhone;
+
+        } else if ("USER".equals(buyerType)) {
+            // 구매자가 일반유저인 경우 -> user_tb 조회 (Seller 백엔드에서 접근 가능하다면)
+            // (만약 User UID가 0으로 들어온다면 조회가 불가능하므로, 이 경우엔 프론트 값을 믿거나 예외처리)
+            if (buyerUid != 0) {
+                String dbPhone = reservationRepository.selectUserPhone(buyerUid);
+                if (dbPhone != null) realBuyerPhone = dbPhone;
+            } else {
+                // UID가 0이면(문자열 ID 유저) 프론트에서 준 값 사용
                 if (buyerPhone != null && !buyerPhone.isEmpty()) realBuyerPhone = buyerPhone;
-            }
-        } else {
-            // 일반 User라면 프론트에서 보내준 값 우선 사용
-            if (buyerPhone != null && !buyerPhone.isEmpty()) {
-                realBuyerPhone = buyerPhone;
             }
         }
 

@@ -33,5 +33,9 @@ public interface ReservationRepository {
 
     ReservationResponse selectLatestReservationBySeller(@Param("sellerUid") int sellerUid);
 
-    String selectSellerPhone(@Param("sellerUid") int sellerUid);
+    // ✅ 이거 하나만 남기세요! (XML의 #{uid}와 일치해야 함)
+    String selectSellerPhone(@Param("uid") int uid);
+
+    // ✅ 일반 유저 폰번호 조회
+    String selectUserPhone(@Param("uid") int uid);
 }
