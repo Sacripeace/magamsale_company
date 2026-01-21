@@ -59,7 +59,7 @@
         SELECT
         uid          AS sellerUid,
         store_name   AS storeName,
-        phone_number AS phone,
+        phone_number AS phoneNumber,
         business_uid AS businessNumber,
         address      AS address,
         store_lat    AS storeLat,
