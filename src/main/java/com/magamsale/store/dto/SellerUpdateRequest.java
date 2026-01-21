@@ -1,6 +1,6 @@
 package com.magamsale.store.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+// import com.fasterxml.jackson.annotation.JsonProperty; // 🚨 이거 필요 없어졌으니 지우셔도 됩니다.
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,20 +8,21 @@ import lombok.Setter;
 @Setter
 public class SellerUpdateRequest {
 
-    private String storeName;      // 상점명
-    private String ownerName;      // 대표자명 (없으면 null)
-    @JsonProperty("phone")
-    private String phoneNumber;          // 전화번호
-    private String businessNumber; // 사업자번호
-    private String address;        // 주소
+    private String storeName;
+    private String ownerName;
 
-    private String storeOpen;      // 오픈 시간
-    private String storeClose;     // 마감 시간
+    private String phoneNumber;
+
+    private String businessNumber;
+    private String address;
+
+    private String storeOpen;
+    private String storeClose;
 
     private Double storeLat;
     private Double storeLng;
 
-    private String bankName;       // (없으면 null)
-    private String accountNumber;  // (없으면 null)
-    private String accountHolder;  // (없으면 null)
+    private String bankName;
+    private String accountNumber;
+    private String accountHolder;
 }
